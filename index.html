@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>アガペの里 採用トラッカーへ - ホーム</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body data-page="home">
+  <div id="toast" class="toast"></div>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="./index.html" class="brand">
+        <div class="brand-icon"><img src="./assets/agp-logo-mark.png" alt="AGPロゴ" class="brand-logo-image"></div>
+        <div>
+          <div class="brand-title">アガペの里　採用トラッカーへ</div>
+          <div class="brand-sub">採用管理 / 面接 / 評価 / 分析</div>
+        </div>
+      </a>
+
+      <div class="topbar-actions">
+        <button class="btn btn-soft" type="button" onclick="App.exportJSON()">
+          <i class="fa-solid fa-download"></i> JSON出力
+        </button>
+        <label class="btn btn-secondary file-label">
+          <i class="fa-solid fa-upload"></i> JSON読込
+          <input id="json-import" type="file" accept=".json,application/json" onchange="App.importJSON(event)">
+        </label>
+        <button class="btn btn-primary" type="button" onclick="App.openCandidateModal()">
+          <i class="fa-solid fa-plus"></i> 候補者追加
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <section class="hero-grid">
+      <div class="card hero-card">
+        <div class="hero-brand-row">
+          <img src="./assets/agp-logo-mark.png" alt="AGPロゴ" class="hero-logo-image">
+          <div class="hero-brand-copy">
+            <div class="hero-brand-title">アガペの里 採用トラッカー</div>
+            <div class="hero-brand-sub">アガペの里 介護ステーション 採用管理</div>
+          </div>
+        </div>
+        <h1 class="hero-title">採用状況を、感覚ではなく数値で把握する。</h1>
+        <p class="hero-text">
+          応募数、面接化率、内定率、採用ソース別成果、月別推移、評価平均まで可視化。
+          現場でも経営でもそのまま使える採用ダッシュボードです。
+        </p>
+
+        <div class="hero-actions">
+          <button class="btn btn-primary" type="button" onclick="App.openCandidateModal()">
+            <i class="fa-solid fa-user-plus"></i> 新規候補者を登録
+          </button>
+          <a class="btn btn-secondary" href="./analytics.html">
+            <i class="fa-solid fa-chart-column"></i> 分析を見る
+          </a>
+        </div>
+
+        <div class="mini-stats">
+          <div class="mini-stat">
+            <div class="mini-label">総応募者</div>
+            <div class="mini-value" id="hero-total-candidates">0</div>
+          </div>
+          <div class="mini-stat">
+            <div class="mini-label">選考中</div>
+            <div class="mini-value" id="hero-in-progress">0</div>
+          </div>
+          <div class="mini-stat">
+            <div class="mini-label">今月採用</div>
+            <div class="mini-value" id="hero-this-month">0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card side-card">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">採用進捗スコア</h2>
+            <div class="section-sub">面接化率と内定率から自動算出</div>
+          </div>
+        </div>
+
+        <div class="score-ring-wrap">
+          <div class="score-ring" id="progress-ring">
+            <div class="score-ring-inner">
+              <div class="score-value" id="progress-score">0</div>
+              <div class="score-label">/ 100</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="summary-list">
+          <div class="summary-item">
+            <span>面接化率</span>
+            <strong id="summary-interview-rate">0%</strong>
+          </div>
+          <div class="summary-item">
+            <span>内定率</span>
+            <strong id="summary-offer-rate">0%</strong>
+          </div>
+          <div class="summary-item">
+            <span>平均初回面接日数</span>
+            <strong id="summary-days-to-interview">-</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card section-card">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">主要KPI</h2>
+          <div class="section-sub">採用活動の全体状況</div>
+        </div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card kpi-blue">
+          <div class="kpi-label">総応募者</div>
+          <div class="kpi-value" id="kpi-total-candidates">0</div>
+          <div class="kpi-foot" id="kpi-total-candidates-foot">候補者全体数</div>
+        </div>
+
+        <div class="kpi-card kpi-green">
+          <div class="kpi-label">面接設定数</div>
+          <div class="kpi-value" id="kpi-total-interviews">0</div>
+          <div class="kpi-foot" id="kpi-total-interviews-foot">面接予定数</div>
+        </div>
+
+        <div class="kpi-card kpi-orange">
+          <div class="kpi-label">内定者</div>
+          <div class="kpi-value" id="kpi-offered">0</div>
+          <div class="kpi-foot" id="kpi-offered-foot">内定率</div>
+        </div>
+
+        <div class="kpi-card kpi-purple">
+          <div class="kpi-label">今月採用</div>
+          <div class="kpi-value" id="kpi-this-month">0</div>
+          <div class="kpi-foot" id="kpi-this-month-foot">今月の採用数</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-grid">
+      <div class="card section-card">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">今週の面接予定</h2>
+            <div class="section-sub">直近7日間のスケジュール</div>
+          </div>
+        </div>
+        <div id="dashboard-upcoming-interviews"></div>
+      </div>
+
+      <div class="card section-card">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">優先フォロー候補</h2>
+            <div class="section-sub">優先度「高」かつ未決着</div>
+          </div>
+        </div>
+        <div id="dashboard-priority-list"></div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <a class="nav-item" data-page="home" href="./index.html"><i class="fa-solid fa-house"></i><span>ホーム</span></a>
+    <a class="nav-item" data-page="candidates" href="./candidates.html"><i class="fa-solid fa-users"></i><span>候補者</span></a>
+    <a class="nav-item" data-page="interviews" href="./interviews.html"><i class="fa-solid fa-calendar-days"></i><span>面接</span></a>
+    <a class="nav-item" data-page="evaluation" href="./evaluation.html"><i class="fa-solid fa-star"></i><span>評価</span></a>
+    <a class="nav-item" data-page="analytics" href="./analytics.html"><i class="fa-solid fa-chart-simple"></i><span>分析</span></a>
+    <a class="nav-item" data-page="settings" href="./settings.html"><i class="fa-solid fa-gear"></i><span>設定</span></a>
+  </nav>
+
+  <button class="fab" type="button" onclick="App.openCandidateModal()">
+    <i class="fa-solid fa-plus"></i>
+  </button>
+
+  <div id="modal-root"></div>
+  <script src="./app.js"></script>
+</body>
+</html>

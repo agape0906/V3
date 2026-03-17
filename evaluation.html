@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>アガペの里 採用トラッカーへ - 評価管理</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body data-page="evaluation">
+  <div id="toast" class="toast"></div>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="./index.html" class="brand">
+        <div class="brand-icon"><img src="./assets/agp-logo-mark.png" alt="AGPロゴ" class="brand-logo-image"></div>
+        <div>
+          <div class="brand-title">アガペの里　採用トラッカーへ</div>
+          <div class="brand-sub">評価管理</div>
+        </div>
+      </a>
+      <div class="topbar-actions">
+        <button class="btn btn-primary" type="button" onclick="App.openEvaluationModal()">
+          <i class="fa-solid fa-star"></i> 評価を追加
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <section class="card section-card">
+      <div class="section-head">
+        <div>
+          <h1 class="section-title">候補者評価</h1>
+          <div class="section-sub">既存ヒアリングシート対応 / 2名が別々に記入・比較・平均確定</div>
+        </div>
+      </div>
+      <div id="evaluations-list"></div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <a class="nav-item" data-page="home" href="./index.html"><i class="fa-solid fa-house"></i><span>ホーム</span></a>
+    <a class="nav-item" data-page="candidates" href="./candidates.html"><i class="fa-solid fa-users"></i><span>候補者</span></a>
+    <a class="nav-item" data-page="interviews" href="./interviews.html"><i class="fa-solid fa-calendar-days"></i><span>面接</span></a>
+    <a class="nav-item" data-page="evaluation" href="./evaluation.html"><i class="fa-solid fa-star"></i><span>評価</span></a>
+    <a class="nav-item" data-page="analytics" href="./analytics.html"><i class="fa-solid fa-chart-simple"></i><span>分析</span></a>
+    <a class="nav-item" data-page="settings" href="./settings.html"><i class="fa-solid fa-gear"></i><span>設定</span></a>
+  </nav>
+
+  <button class="fab" type="button" onclick="App.openEvaluationModal()">
+    <i class="fa-solid fa-star"></i>
+  </button>
+
+  <div id="modal-root"></div>
+  <script src="./app.js"></script>
+</body>
+</html>

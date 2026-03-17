@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>アガペの里 採用トラッカーへ - 設定</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body data-page="settings">
+  <div id="toast" class="toast"></div>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="./index.html" class="brand">
+        <div class="brand-icon"><img src="./assets/agp-logo-mark.png" alt="AGPロゴ" class="brand-logo-image"></div>
+        <div>
+          <div class="brand-title">アガペの里　採用トラッカーへ</div>
+          <div class="brand-sub">設定</div>
+        </div>
+      </a>
+    </div>
+  </header>
+
+  <main class="app-shell settings-shell">
+    <section class="card section-card">
+      <div class="section-head">
+        <div>
+          <h1 class="section-title">基本設定</h1>
+          <div class="section-sub">目標採用数と運用情報</div>
+        </div>
+      </div>
+
+      <form id="settings-form" class="settings-form">
+        <label class="form-row">
+          <span class="form-label">会社名 / チーム名</span>
+          <input class="form-input" type="text" id="settings-company-name" placeholder="例: 株式会社サンプル">
+        </label>
+
+        <label class="form-row">
+          <span class="form-label">月間採用目標</span>
+          <input class="form-input" type="number" id="settings-monthly-target" min="1" max="200" value="3">
+        </label>
+
+        <label class="form-row">
+          <span class="form-label">フォロー目安日数</span>
+          <input class="form-input" type="number" id="settings-reminder-days" min="1" max="60" value="5">
+        </label>
+
+        <div class="form-row full">
+          <span class="form-label">採用ソース（候補者追加のプルダウン）</span>
+          <div class="source-editor-input">
+            <input class="form-input" type="text" id="settings-source-new" placeholder="例: ハローワーク">
+            <button class="btn btn-secondary" type="button" onclick="App.addSettingOptionFromInput('sourceOptions')">
+              <i class="fa-solid fa-plus"></i> 追加
+            </button>
+          </div>
+          <div class="source-chip-list" id="settings-source-list"></div>
+        </div>
+
+        <div class="form-row full">
+          <span class="form-label">職種（候補者追加のプルダウン）</span>
+          <div class="source-editor-input">
+            <input class="form-input" type="text" id="settings-job-new" placeholder="例: 介護職">
+            <button class="btn btn-secondary" type="button" onclick="App.addSettingOptionFromInput('jobOptions')">
+              <i class="fa-solid fa-plus"></i> 追加
+            </button>
+          </div>
+          <div class="source-chip-list" id="settings-job-list"></div>
+        </div>
+
+        <div class="form-row full">
+          <span class="form-label">雇用形態（候補者追加のプルダウン）</span>
+          <div class="source-editor-input">
+            <input class="form-input" type="text" id="settings-employment-new" placeholder="例: 正社員">
+            <button class="btn btn-secondary" type="button" onclick="App.addSettingOptionFromInput('employmentOptions')">
+              <i class="fa-solid fa-plus"></i> 追加
+            </button>
+          </div>
+          <div class="source-chip-list" id="settings-employment-list"></div>
+        </div>
+
+        <div class="form-row full">
+          <span class="form-label">応募支店（候補者追加のプルダウン）</span>
+          <div class="source-editor-input">
+            <input class="form-input" type="text" id="settings-branch-new" placeholder="例: なにわ">
+            <button class="btn btn-secondary" type="button" onclick="App.addSettingOptionFromInput('branchOptions')">
+              <i class="fa-solid fa-plus"></i> 追加
+            </button>
+          </div>
+          <div class="source-chip-list" id="settings-branch-list"></div>
+        </div>
+
+        <button class="btn btn-primary" type="submit">
+          <i class="fa-solid fa-floppy-disk"></i> 設定を保存
+        </button>
+      </form>
+    </section>
+
+    <section class="card section-card">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">データ管理</h2>
+          <div class="section-sub">バックアップ / 復元 / サンプル投入</div>
+        </div>
+      </div>
+
+      <div class="actions-wrap">
+        <button class="btn btn-soft" type="button" onclick="App.exportJSON()">
+          <i class="fa-solid fa-download"></i> JSONをエクスポート
+        </button>
+
+        <label class="btn btn-secondary file-label">
+          <i class="fa-solid fa-upload"></i> JSONをインポート
+          <input id="json-import" type="file" accept=".json,application/json" onchange="App.importJSON(event)">
+        </label>
+
+        <button class="btn btn-secondary" type="button" onclick="App.seedSampleData()">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> サンプルデータ投入
+        </button>
+
+        <button class="btn btn-danger" type="button" onclick="App.resetAllData()">
+          <i class="fa-solid fa-trash"></i> 全データを初期化
+        </button>
+      </div>
+
+      <div class="settings-summary" id="settings-data-summary"></div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <a class="nav-item" data-page="home" href="./index.html"><i class="fa-solid fa-house"></i><span>ホーム</span></a>
+    <a class="nav-item" data-page="candidates" href="./candidates.html"><i class="fa-solid fa-users"></i><span>候補者</span></a>
+    <a class="nav-item" data-page="interviews" href="./interviews.html"><i class="fa-solid fa-calendar-days"></i><span>面接</span></a>
+    <a class="nav-item" data-page="evaluation" href="./evaluation.html"><i class="fa-solid fa-star"></i><span>評価</span></a>
+    <a class="nav-item" data-page="analytics" href="./analytics.html"><i class="fa-solid fa-chart-simple"></i><span>分析</span></a>
+    <a class="nav-item" data-page="settings" href="./settings.html"><i class="fa-solid fa-gear"></i><span>設定</span></a>
+  </nav>
+
+  <div id="modal-root"></div>
+  <script src="./app.js"></script>
+</body>
+</html>

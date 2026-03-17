@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>アガペの里 採用トラッカーへ - 分析</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body data-page="analytics">
+  <div id="toast" class="toast"></div>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="./index.html" class="brand">
+        <div class="brand-icon"><img src="./assets/agp-logo-mark.png" alt="AGPロゴ" class="brand-logo-image"></div>
+        <div>
+          <div class="brand-title">アガペの里　採用トラッカーへ</div>
+          <div class="brand-sub">分析ダッシュボード</div>
+        </div>
+      </a>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <section class="card section-card">
+      <div class="section-head">
+        <div>
+          <h1 class="section-title">採用分析</h1>
+          <div class="section-sub">ソース別成果・月別採用・ステータス分布</div>
+        </div>
+      </div>
+
+      <div class="kpi-grid analytics-kpi-grid">
+        <div class="kpi-card kpi-blue">
+          <div class="kpi-label">総応募者</div>
+          <div class="kpi-value" id="ana-total-candidates">0</div>
+        </div>
+        <div class="kpi-card kpi-green">
+          <div class="kpi-label">面接化率</div>
+          <div class="kpi-value" id="ana-interview-rate">0%</div>
+        </div>
+        <div class="kpi-card kpi-orange">
+          <div class="kpi-label">内定率</div>
+          <div class="kpi-value" id="ana-offer-rate">0%</div>
+        </div>
+        <div class="kpi-card kpi-purple">
+          <div class="kpi-label">評価平均</div>
+          <div class="kpi-value" id="ana-evaluation-average">-</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-grid analytics-grid">
+      <div class="card section-card">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">月別採用数（直近6ヶ月）</h2>
+            <div class="section-sub">採用確定日ベース</div>
+          </div>
+        </div>
+        <div id="monthly-chart" class="bar-chart"></div>
+      </div>
+
+      <div class="card section-card">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">ステータス分布</h2>
+            <div class="section-sub">候補者数の内訳</div>
+          </div>
+        </div>
+        <div id="status-chart" class="status-chart"></div>
+      </div>
+    </section>
+
+    <section class="card section-card">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">採用ソース別成果</h2>
+          <div class="section-sub">応募数・内定数・採用数</div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ソース</th>
+              <th>応募数</th>
+              <th>内定数</th>
+              <th>採用数</th>
+              <th>採用率</th>
+            </tr>
+          </thead>
+          <tbody id="source-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <a class="nav-item" data-page="home" href="./index.html"><i class="fa-solid fa-house"></i><span>ホーム</span></a>
+    <a class="nav-item" data-page="candidates" href="./candidates.html"><i class="fa-solid fa-users"></i><span>候補者</span></a>
+    <a class="nav-item" data-page="interviews" href="./interviews.html"><i class="fa-solid fa-calendar-days"></i><span>面接</span></a>
+    <a class="nav-item" data-page="evaluation" href="./evaluation.html"><i class="fa-solid fa-star"></i><span>評価</span></a>
+    <a class="nav-item" data-page="analytics" href="./analytics.html"><i class="fa-solid fa-chart-simple"></i><span>分析</span></a>
+    <a class="nav-item" data-page="settings" href="./settings.html"><i class="fa-solid fa-gear"></i><span>設定</span></a>
+  </nav>
+
+  <div id="modal-root"></div>
+  <script src="./app.js"></script>
+</body>
+</html>

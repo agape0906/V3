@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>アガペの里 採用トラッカーへ - 候補者管理</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body data-page="candidates">
+  <div id="toast" class="toast"></div>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="./index.html" class="brand">
+        <div class="brand-icon"><img src="./assets/agp-logo-mark.png" alt="AGPロゴ" class="brand-logo-image"></div>
+        <div>
+          <div class="brand-title">アガペの里　採用トラッカーへ</div>
+          <div class="brand-sub">候補者管理</div>
+        </div>
+      </a>
+
+      <div class="topbar-actions">
+        <button class="btn btn-primary" type="button" onclick="App.openCandidateModal()">
+          <i class="fa-solid fa-plus"></i> 候補者追加
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <section class="card section-card">
+      <div class="section-head">
+        <div>
+          <h1 class="section-title">候補者一覧</h1>
+          <div class="section-sub">検索・絞り込み・編集・面接設定</div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input id="candidate-search" class="search-input" type="text" placeholder="氏名 / 職種 / 雇用形態 / 応募支店 / 電話 / メール / 備考で検索" oninput="App.renderCandidates()">
+        </div>
+
+        <select id="candidate-sort" class="form-select sort-select" onchange="App.renderCandidates()">
+          <option value="updated_desc">更新日が新しい順</option>
+          <option value="created_desc">登録日が新しい順</option>
+          <option value="name_asc">氏名順</option>
+          <option value="priority_desc">優先度順</option>
+        </select>
+
+        <button class="btn btn-secondary" type="button" onclick="App.clearCandidateFilters()">絞り込み解除</button>
+      </div>
+
+      <div class="chip-row" id="status-filters"></div>
+      <div class="candidate-grid" id="candidates-list"></div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <a class="nav-item" data-page="home" href="./index.html"><i class="fa-solid fa-house"></i><span>ホーム</span></a>
+    <a class="nav-item" data-page="candidates" href="./candidates.html"><i class="fa-solid fa-users"></i><span>候補者</span></a>
+    <a class="nav-item" data-page="interviews" href="./interviews.html"><i class="fa-solid fa-calendar-days"></i><span>面接</span></a>
+    <a class="nav-item" data-page="evaluation" href="./evaluation.html"><i class="fa-solid fa-star"></i><span>評価</span></a>
+    <a class="nav-item" data-page="analytics" href="./analytics.html"><i class="fa-solid fa-chart-simple"></i><span>分析</span></a>
+    <a class="nav-item" data-page="settings" href="./settings.html"><i class="fa-solid fa-gear"></i><span>設定</span></a>
+  </nav>
+
+  <button class="fab" type="button" onclick="App.openCandidateModal()">
+    <i class="fa-solid fa-plus"></i>
+  </button>
+
+  <div id="modal-root"></div>
+  <script src="./app.js"></script>
+</body>
+</html>
