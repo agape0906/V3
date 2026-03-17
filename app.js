@@ -77,11 +77,23 @@
   const PRIORITY_SET = new Set(PRIORITY_OPTIONS.map((v) => v.value));
   const RESOLVED = new Set(["hired", "rejected", "withdrawn"]);
   const PRIORITY_ORDER = { high: 3, medium: 2, low: 1 };
-  const AUTH_STORAGE_KEY = "recruit-tracker-pro.auth";
-  const AUTH_PASSWORD = "agape2202";
+  const DEVICE_ID_KEY = "recruit-tracker-pro.device-id";
+  const CLOUD_COLLECTION = "recruitTrackerProStates";
 
   let state = createDefaultState();
   let toastTimer = null;
+  let authUser = null;
+  let firebaseInitialized = false;
+  let firstAuthResolved = false;
+  let cloudDocRef = null;
+  let cloudUnsubscribe = null;
+  let cloudSyncTimer = null;
+  let applyingRemoteState = false;
+  let resolveAuthReady = null;
+  let cachedDeviceId = null;
+  const authReadyPromise = new Promise((resolve) => {
+    resolveAuthReady = resolve;
+  });
 
   function createDefaultState() {
     return {
@@ -107,6 +119,36 @@
 
   function uid(prefix) {
     return `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
+  }
+
+  function getDeviceId() {
+    if (cachedDeviceId) return cachedDeviceId;
+    try {
+      const existing = localStorage.getItem(DEVICE_ID_KEY);
+      if (existing) {
+        cachedDeviceId = existing;
+        return existing;
+      }
+      const created = `dev_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
+      localStorage.setItem(DEVICE_ID_KEY, created);
+      cachedDeviceId = created;
+      return created;
+    } catch (_error) {
+      cachedDeviceId = `dev_${Math.random().toString(36).slice(2, 10)}`;
+      return cachedDeviceId;
+    }
+  }
+
+  function hasFirebaseConfig() {
+    const cfg = window.__FIREBASE_CONFIG__;
+    return Boolean(
+      cfg &&
+        typeof cfg === "object" &&
+        cfg.apiKey &&
+        cfg.authDomain &&
+        cfg.projectId &&
+        typeof window.firebase !== "undefined"
+    );
   }
 
   function parseDate(value) {
@@ -316,8 +358,86 @@
     return document.body?.dataset.page || "home";
   }
 
-  function saveState() {
+  function saveStateLocalOnly() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function isCloudSyncReady() {
+    return firebaseInitialized && Boolean(authUser?.uid) && Boolean(cloudDocRef);
+  }
+
+  async function pushStateToCloud() {
+    if (!isCloudSyncReady() || applyingRemoteState) return;
+    try {
+      const payload = {
+        state,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedBy: getDeviceId(),
+        updatedByName: String(authUser?.displayName || authUser?.email || "unknown")
+      };
+      await cloudDocRef.set(payload, { merge: true });
+    } catch (_error) {
+      showToast("Google同期に失敗しました。ネットワークを確認してください。");
+    }
+  }
+
+  function scheduleCloudSync() {
+    if (!isCloudSyncReady() || applyingRemoteState) return;
+    if (cloudSyncTimer) clearTimeout(cloudSyncTimer);
+    cloudSyncTimer = setTimeout(() => {
+      pushStateToCloud();
+    }, 500);
+  }
+
+  function stopCloudSubscription() {
+    if (typeof cloudUnsubscribe === "function") {
+      cloudUnsubscribe();
+    }
+    cloudUnsubscribe = null;
+    cloudDocRef = null;
+  }
+
+  function applyRemoteState(remoteRaw, silent = false) {
+    const remote = normalizeState(remoteRaw);
+    const localSnapshot = JSON.stringify(state);
+    const remoteSnapshot = JSON.stringify(remote);
+    if (localSnapshot === remoteSnapshot) return false;
+    applyingRemoteState = true;
+    state = remote;
+    saveStateLocalOnly();
+    applyingRemoteState = false;
+    renderPage();
+    if (!silent) showToast("Google同期で最新データを反映しました。");
+    return true;
+  }
+
+  async function initializeCloudStateForUser(user) {
+    if (!firebaseInitialized || !user?.uid) return;
+    stopCloudSubscription();
+    cloudDocRef = firebase.firestore().collection(CLOUD_COLLECTION).doc(user.uid);
+    try {
+      const snapshot = await cloudDocRef.get();
+      if (snapshot.exists && snapshot.data()?.state) {
+        applyRemoteState(snapshot.data().state, true);
+      } else {
+        await pushStateToCloud();
+      }
+    } catch (_error) {
+      showToast("クラウドデータの取得に失敗しました。");
+    }
+
+    cloudUnsubscribe = cloudDocRef.onSnapshot((snapshot) => {
+      if (!snapshot.exists) return;
+      const data = snapshot.data() || {};
+      if (!data.state) return;
+      if (String(data.updatedBy || "") === getDeviceId()) return;
+      applyRemoteState(data.state);
+    });
+  }
+
+  function saveState() {
+    saveStateLocalOnly();
+    scheduleCloudSync();
   }
 
   function normalizeState(raw) {
@@ -518,66 +638,159 @@
     toastTimer = setTimeout(() => el.classList.remove("show"), 2400);
   }
 
-  function isAuthenticated() {
+  function markAuthReadyResolved() {
+    if (firstAuthResolved) return;
+    firstAuthResolved = true;
+    if (typeof resolveAuthReady === "function") {
+      resolveAuthReady();
+    }
+  }
+
+  function hideAuthGate() {
+    document.getElementById("auth-gate")?.remove();
+  }
+
+  function renderAuthControls() {
+    const topbarInner = document.querySelector(".topbar-inner");
+    if (!topbarInner) return;
+    let actions = topbarInner.querySelector(".topbar-actions");
+    if (!actions) {
+      actions = document.createElement("div");
+      actions.className = "topbar-actions";
+      topbarInner.appendChild(actions);
+    }
+    let wrapper = document.getElementById("auth-user-controls");
+    if (!wrapper) {
+      wrapper = document.createElement("div");
+      wrapper.id = "auth-user-controls";
+      wrapper.className = "auth-user-controls";
+      actions.appendChild(wrapper);
+    }
+    if (!authUser) {
+      wrapper.innerHTML = "";
+      return;
+    }
+    const userLabel = String(authUser.displayName || authUser.email || "Google User");
+    wrapper.innerHTML = `
+      <span class="auth-user-chip" title="${escapeHtml(userLabel)}">
+        <i class="fa-solid fa-circle-user"></i> ${escapeHtml(truncate(userLabel, 20))}
+      </span>
+      <button class="btn btn-soft btn-sm" type="button" id="auth-logout-btn">
+        <i class="fa-solid fa-right-from-bracket"></i> ログアウト
+      </button>
+    `;
+    document.getElementById("auth-logout-btn")?.addEventListener("click", () => {
+      signOutGoogle();
+    });
+  }
+
+  async function signInWithGoogle() {
+    if (!firebaseInitialized) {
+      showToast("Googleログイン設定が未完了です。");
+      return;
+    }
     try {
-      return sessionStorage.getItem(AUTH_STORAGE_KEY) === "ok";
+      const provider = new firebase.auth.GoogleAuthProvider();
+      await firebase.auth().signInWithPopup(provider);
+    } catch (error) {
+      if (String(error?.code || "") === "auth/popup-blocked") {
+        try {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          await firebase.auth().signInWithRedirect(provider);
+          return;
+        } catch (_redirectError) {
+          /* ignore and show generic message below */
+        }
+      }
+      showToast("Googleログインに失敗しました。");
+    }
+  }
+
+  async function signOutGoogle() {
+    if (!firebaseInitialized) return;
+    try {
+      await firebase.auth().signOut();
+      showToast("ログアウトしました。");
     } catch (_error) {
-      return false;
+      showToast("ログアウトに失敗しました。");
     }
   }
 
   function showAuthGate() {
     if (document.getElementById("auth-gate")) return;
+    const configured = hasFirebaseConfig();
     const gate = document.createElement("div");
     gate.id = "auth-gate";
     gate.className = "auth-gate";
     gate.innerHTML = `
       <div class="auth-card">
         <h1 class="auth-title">アガペの里　採用トラッカーへ</h1>
-        <p class="auth-sub">アクセスするにはパスワードを入力してください。</p>
-        <form id="auth-form">
-          <label class="form-row">
-            <span class="form-label">パスワード</span>
-            <input class="form-input" type="password" id="auth-password-input" autocomplete="current-password" required>
-          </label>
-          <p class="auth-error" id="auth-error"></p>
-          <button class="btn btn-primary" type="submit"><i class="fa-solid fa-lock-open"></i> ログイン</button>
-        </form>
+        <p class="auth-sub">Googleアカウントでログインして、複数デバイスでデータ同期します。</p>
+        <button class="btn btn-primary" type="button" id="google-login-btn" ${configured ? "" : "disabled"}>
+          <i class="fa-brands fa-google"></i> Googleでログイン
+        </button>
+        <p class="auth-hint">
+          ${
+            configured
+              ? "同じGoogleアカウントでログインすれば、PC/スマホ間でデータが同期されます。"
+              : "Firebase設定が未入力です。`firebase-config.js` に設定値を入力してください。"
+          }
+        </p>
       </div>
     `;
     document.body.appendChild(gate);
-
-    const form = document.getElementById("auth-form");
-    const input = document.getElementById("auth-password-input");
-    const errorEl = document.getElementById("auth-error");
-    input?.focus();
-    form?.addEventListener("submit", (event) => {
-      event.preventDefault();
-      const value = String(input?.value || "");
-      if (value === AUTH_PASSWORD) {
-        try {
-          sessionStorage.setItem(AUTH_STORAGE_KEY, "ok");
-        } catch (_error) {
-          /* no-op */
-        }
-        gate.remove();
-        activateNav();
-        renderPage();
-        showToast("ログインしました。");
-        return;
-      }
-      if (errorEl) {
-        errorEl.textContent = "パスワードが違います。";
-      }
-      if (input) {
-        input.value = "";
-        input.focus();
-      }
+    document.getElementById("google-login-btn")?.addEventListener("click", () => {
+      signInWithGoogle();
     });
   }
 
+  function setupFirebaseAuth() {
+    if (!hasFirebaseConfig()) {
+      showAuthGate();
+      markAuthReadyResolved();
+      return false;
+    }
+    if (firebaseInitialized) return true;
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(window.__FIREBASE_CONFIG__);
+    }
+    firebaseInitialized = true;
+    firebase
+      .auth()
+      .setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+      .catch(() => {
+        /* ignore */
+      });
+
+    firebase.auth().onAuthStateChanged(async (user) => {
+      authUser = user || null;
+      renderAuthControls();
+      if (!authUser) {
+        stopCloudSubscription();
+        showAuthGate();
+        markAuthReadyResolved();
+        return;
+      }
+      hideAuthGate();
+      await initializeCloudStateForUser(authUser);
+      activateNav();
+      renderPage();
+      markAuthReadyResolved();
+    });
+    return true;
+  }
+
+  function isAuthenticated() {
+    return Boolean(authUser?.uid);
+  }
+
   function ensureAuthenticated() {
-    if (isAuthenticated()) return true;
+    if (isAuthenticated()) {
+      hideAuthGate();
+      renderAuthControls();
+      return true;
+    }
     showAuthGate();
     return false;
   }
@@ -2163,11 +2376,14 @@
     showToast("データを初期化しました。");
   }
 
-  function init() {
+  async function init() {
     state = loadState();
+    setupFirebaseAuth();
+    await authReadyPromise;
     if (!ensureAuthenticated()) return;
     activateNav();
     renderPage();
+    renderAuthControls();
   }
 
   const App = {
@@ -2189,9 +2405,12 @@
     exportJSON,
     importJSON,
     seedSampleData,
-    resetAllData
+    resetAllData,
+    signOutGoogle
   };
 
   window.App = App;
-  document.addEventListener("DOMContentLoaded", init);
+  document.addEventListener("DOMContentLoaded", () => {
+    init();
+  });
 })();
